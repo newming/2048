@@ -1,5 +1,10 @@
+var winWidth = Math.min(document.documentElement.clientWidth, 460)
+var gridContainerWidth = 0.92 * winWidth
+var cellSideLength = 0.18 * winWidth
+var cellSpace = 0.04 * winWidth
+
 function getPos(i) {
-  return 20 + i * 120
+  return cellSpace + i * (cellSpace + cellSideLength)
 }
 
 function getNumberBackgroundColor (number) {
@@ -134,4 +139,16 @@ function nomove(board) {
     return false
   }
   return true
+}
+
+function isPassive () {
+  var supportsPassiveOption = false
+  try {
+    addEventListener('test', null, Object.defineProperty({}, 'passive', {
+      get: function () {
+        supportsPassiveOption = true
+      }
+    }))
+  } catch (e) {}
+  return supportsPassiveOption
 }

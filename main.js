@@ -2,9 +2,26 @@ var board = new Array()
 var score = 0
 var hasConflicted = new Array() // 记录是否已经发生过碰撞
 
+var startx = 0
+var starty = 0
+var endx = 0
+var endy = 0
+
 $(document).ready(function () {
+  prepareForMobile()
   newgame()
 })
+
+function prepareForMobile() {
+  $('#grid-container').css('width', gridContainerWidth - 2 * cellSpace)
+  $('#grid-container').css('height', gridContainerWidth - 2 * cellSpace)
+  $('#grid-container').css('padding', cellSpace)
+  $('#grid-container').css('border-radius', 0.02 * gridContainerWidth)
+
+  $('.grid-cell').css('width', cellSideLength)
+  $('.grid-cell').css('height', cellSideLength)
+  $('.grid-cell').css('border-radius', 0.02 * cellSideLength)
+}
 
 function newgame() {
   // 初始化棋盘
@@ -50,11 +67,11 @@ function updataBoardView() {
       if (board[i][j] === 0) {
         theNumberCell.css('width', '0px')
         theNumberCell.css('height', '0px')
-        theNumberCell.css('top', getPos(i) + 50) // 不显示的时候放在方格中心，动画好看
-        theNumberCell.css('left', getPos(j) + 50)
+        theNumberCell.css('top', getPos(i) + cellSideLength / 2) // 不显示的时候放在方格中心，动画好看
+        theNumberCell.css('left', getPos(j) + cellSideLength / 2)
       } else {
-        theNumberCell.css('width', '100px')
-        theNumberCell.css('height', '100px')
+        theNumberCell.css('width', cellSideLength)
+        theNumberCell.css('height', cellSideLength)
         theNumberCell.css('top', getPos(i))
         theNumberCell.css('left', getPos(j))
         theNumberCell.css('background-color', getNumberBackgroundColor(board[i][j]))
@@ -65,6 +82,8 @@ function updataBoardView() {
       hasConflicted[i][j] = false
     }
   }
+  $('.number-cell').css('line-height', cellSideLength + 'px')
+  $('.number-cell').css('font-size', 0.6 * cellSideLength + 'px')
 }
 
 function generateOneNumber() {
@@ -106,33 +125,40 @@ function generateOneNumber() {
   board[randx][randy] = randNumber
   showNumberWithAnimation(randx, randy, randNumber)
 
+  isgameover()
+
   return true
 }
 
 $(document).keydown(function (event) {
   switch (event.keyCode) {
     case 37: // left
+      event.preventDefault() // 当有滚动条的时候，网页会滚动，阻止了
       if (moveLeft()){
-        setTimeout(generateOneNumber, 210)
-        setTimeout(isgameover(), 300) // gameover 要等 moveleft 中的 200 毫秒动画完成
+        setTimeout(generateOneNumber, 250)
+        // 发现放到这里有问题， generateOneNumber 到后边比较费时间，isgameover 会先执行了，所以拿到了 generateOneNumber 中，需要改成异步
+        // setTimeout(isgameover(), 350) // gameover 要等 moveleft 中的 200 毫秒动画完成
       }
       break
-      case 38:
+    case 38:
+      event.preventDefault() // 当有滚动条的时候，网页会滚动，阻止了
       if (moveUp()){
-        setTimeout(generateOneNumber, 210)
-        setTimeout(isgameover(), 300)
+        setTimeout(generateOneNumber, 250)
+        // setTimeout(isgameover(), 350)
       }
       break
-      case 39:
+    case 39:
+      event.preventDefault() // 当有滚动条的时候，网页会滚动，阻止了
       if (moveRight()){
-        setTimeout(generateOneNumber, 210)
-        setTimeout(isgameover(), 300)
+        setTimeout(generateOneNumber, 250)
+        // setTimeout(isgameover(), 350)
       }
       break
-      case 40:
+    case 40:
+      event.preventDefault() // 当有滚动条的时候，网页会滚动，阻止了
       if (moveDown()){
-        setTimeout(generateOneNumber, 210)
-        setTimeout(isgameover(), 300)
+        setTimeout(generateOneNumber, 250)
+        // setTimeout(isgameover(), 350)
       }
       break
     default:
@@ -140,6 +166,57 @@ $(document).keydown(function (event) {
   }
 })
 
+document.addEventListener('touchstart', function(event) {
+  startx = event.touches[0].pageX
+  starty = event.touches[0].pageY
+})
+
+document.addEventListener('touchmove', function (event) {
+  event.preventDefault()
+}, isPassive() ? {
+  capture: false,
+  passive: false
+} : false)
+
+document.addEventListener('touchend', function(event) {
+  endx = event.changedTouches[0].pageX
+  endy = event.changedTouches[0].pageY
+
+  var deltax = endx - startx
+  var deltay = endy - starty
+
+  if (Math.abs(deltax) < 80 && Math.abs(deltay) < 80) {
+    return
+  }
+
+  // x
+  if (Math.abs(deltax) >= Math.abs(deltay)) {
+    if (deltax > 0) {
+      // move right
+      if (moveRight()){
+        setTimeout(generateOneNumber, 250)
+      }
+    } else {
+      // move left
+      if (moveLeft()){
+        setTimeout(generateOneNumber, 250)
+      }
+    }
+  } else {
+    // y
+    if (deltay > 0) {
+      // down
+      if (moveDown()){
+        setTimeout(generateOneNumber, 250)
+      }
+    } else {
+      // up
+      if (moveUp()){
+        setTimeout(generateOneNumber, 250)
+      }
+    }
+  }
+})
 
 function isgameover() {
   // 没有空间并且都不能移动时结束
