@@ -1,5 +1,6 @@
 var board = new Array()
 var score = 0
+var hasConflicted = new Array() // 记录是否已经发生过碰撞
 
 $(document).ready(function () {
   newgame()
@@ -25,12 +26,16 @@ function init() {
   // 将 board 初始化为二维数组
   for (let i = 0; i < 4; i++) {
     board[i] = new Array()
+    hasConflicted[i] = new Array()
     for (let j = 0; j < 4; j++) {
       board[i][j] = 0
+      hasConflicted[i][j] = false
     }
   }
 
   updataBoardView()
+
+  score = 0
 }
 
 function updataBoardView() {
@@ -56,6 +61,8 @@ function updataBoardView() {
         theNumberCell.css('color', getNumberColor(board[i][j]))
         theNumberCell.text(board[i][j])
       }
+      // 每次更新后重新计算碰撞
+      hasConflicted[i][j] = false
     }
   }
 }
@@ -146,12 +153,16 @@ function moveLeft() {
             board[i][k] = board[i][j]
             board[i][j] = 0
             continue
-          } else if (board[i][k] === board[i][j] && noBlockHorizontal(i, k, j, board)) {
+          } else if (board[i][k] === board[i][j] && noBlockHorizontal(i, k, j, board) && !hasConflicted[i][k]) {
             // move
             showMoveAnimation(i, j, i, k)
             // add
-            board[i][k] += board[i][j]
+            board[i][k] += board[i][j] // 当出现叠加的时候会进行分数的增加
             board[i][j] = 0
+            score += board[i][k]
+            updateScore(score)
+
+            hasConflicted[i][k] = true
             continue
           }
         }
@@ -180,12 +191,16 @@ function moveUp() {
             board[k][j] = board[i][j]
             board[i][j] = 0
             continue
-          } else if (board[k][j] === board[i][j] && noBlockVertical(j, k, i, board)) {
+          } else if (board[k][j] === board[i][j] && noBlockVertical(j, k, i, board) && !hasConflicted[k][j]) {
             // move
             showMoveAnimation(i, j, k, j)
             // add
             board[k][j] += board[i][j]
             board[i][j] = 0
+            score += board[k][j]
+            updateScore(score)
+
+            hasConflicted[k][j] = true
             continue
           }
         }
@@ -214,12 +229,16 @@ function moveRight() {
             board[i][k] = board[i][j]
             board[i][j] = 0
             continue
-          } else if (board[i][k] === board[i][j] && noBlockHorizontalReverse(i, k, j, board)) {
+          } else if (board[i][k] === board[i][j] && noBlockHorizontalReverse(i, k, j, board) && !hasConflicted[i][k]) {
             // move
             showMoveAnimation(i, j, i, k)
             // add
             board[i][k] += board[i][j]
             board[i][j] = 0
+            score += board[i][k]
+            updateScore(score)
+
+            hasConflicted[i][k] = true
             continue
           }
         }
@@ -248,12 +267,16 @@ function moveDown() {
             board[k][j] = board[i][j]
             board[i][j] = 0
             continue
-          } else if (board[k][j] === board[i][j] && noBlockVertical(j, k, i, board)) {
+          } else if (board[k][j] === board[i][j] && noBlockVertical(j, k, i, board) && !hasConflicted[k][j]) {
             // move
             showMoveAnimation(i, j, k, j)
             // add
             board[k][j] += board[i][j]
             board[i][j] = 0
+            score += board[k][j]
+            updateScore(score)
+
+            hasConflicted[k][j] = true
             continue
           }
         }
